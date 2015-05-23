@@ -46,10 +46,14 @@ public class NetworkMember {
                 @Override
                 public Void call() throws Exception {
                     while (true) {
-                        for(ObjectSocket peer : peers) {
-                            if (peer.available() > 0) {
-                                handlePeerMessage(peer);
+                        try {
+                            for (ObjectSocket peer : peers) {
+                                if (peer.available() > 0) {
+                                    handlePeerMessage(peer);
+                                }
                             }
+                        } catch(Exception e) {
+                            e.printStackTrace();
                         }
                     }
                 }
@@ -87,6 +91,8 @@ public class NetworkMember {
 
     private void handlePeerMessage(ObjectSocket socket) {
         try {
+            logger.debug("handlPeerMessage");
+
             RequestMessage message = (RequestMessage) socket.readObject();
 
             if (message == null)
@@ -137,7 +143,6 @@ public class NetworkMember {
     }
 
     private void messagePeersList(ObjectSocket socket, RequestMessage message) {
-        logger.debug("Peers list received from " + socket);
         for (ObjectSocket s : (ArrayList<ObjectSocket>)message.data) {
             logger.debug("messagePeersList " + s.toString());
         }

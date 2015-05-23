@@ -67,5 +67,14 @@ public class NetworkMemberTest
         assertEquals(2,client.getPeersList().size());
     }
 
+    public void testSendObject() {
+        NetworkMember s1 = new NetworkMember();
+        NetworkMember s2 = new NetworkMember();
+        int port = s1.getServerPort();
+        s2.connectPeer("127.0.0.1",port);
+        boolean succ = s1.sendObject("ssss", s1.getPeersList().get(0));
+        assertTrue(succ);
+    }
+
 
 }

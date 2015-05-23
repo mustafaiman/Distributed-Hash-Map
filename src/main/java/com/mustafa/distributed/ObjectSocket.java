@@ -15,14 +15,14 @@ public class ObjectSocket implements Serializable {
         this.socket = socket;
     }
 
-    public ObjectOutputStream getObjectOutputStream() throws IOException {
+    private ObjectOutputStream getObjectOutputStream() throws IOException {
         if (oos == null) {
             oos = new ObjectOutputStream(getOutputStream());
         }
         return oos;
     }
 
-    public ObjectInputStream getObjectInputStream() throws IOException {
+    private ObjectInputStream getObjectInputStream() throws IOException {
         if (ois == null) {
             ois = new ObjectInputStream(getInputStream());
         }
@@ -34,18 +34,18 @@ public class ObjectSocket implements Serializable {
         getObjectOutputStream().flush();
     }
 
-    public Serializable readObject() throws  IOException {
+    public Object readObject() throws  IOException {
         if (available() <= 0)
             return null;
         try {
-            return (Serializable) getObjectInputStream().readObject();
+            return getObjectInputStream().readObject();
         } catch (ClassNotFoundException e) {
             return null;
         }
     }
 
     public int available() throws IOException{
-        return getObjectInputStream().available();
+        return getInputStream().available();
     }
 
     public Socket getSocket() {
