@@ -18,137 +18,128 @@ import java.util.concurrent.Executors;
 public class NetworkMember {
 
     final static Logger logger = LogManager.getLogger(NetworkMember.class.getName());
-    private static final byte COMMAND_GET_PEERS_LIST = 11;
-    private static final int MAX_RESPONSE_STRING = 1024;
-    private static final byte COMMAND_PUT_KEY = 12;
-    private static final byte COMMAND_SET_PEERS_LIST = 13;
 
     ExecutorService executorServerSocket = Executors.newSingleThreadExecutor();
     ExecutorService executorSockets = Executors.newSingleThreadExecutor();
 
     private ServerSocket serverSocket;
-    private ArrayList<Socket> peers = new ArrayList<>();
+    private ArrayList<ObjectSocket> peers = new ArrayList<>();
 
     private Object lockPeers = new Object();
 
     public NetworkMember() {
-
-    }
-
-    public int joinNetwork() {
-        if( serverSocket != null)
-            return serverSocket.getLocalPort();
-
         try {
             serverSocket = new ServerSocket(0);
-
-
-            executorServerSocket.submit(new Callable<Object>() {
+            executorServerSocket.submit(new Callable<Void>() {
                 @Override
-                public Object call() throws Exception {
-                    while (true) {
-                        Socket socket = serverSocket.accept();
-                        logger.debug("Connection from " + socket.getRemoteSocketAddress());
-                        addToPeers(socket);
+                public Void call() throws Exception {
+                    while(true) {
+                        ObjectSocket socket = new ObjectSocket(serverSocket.accept());
 
+                        logger.info(serverSocket.toString() + " got connection from " + socket.toString());
+                        addToPeers(socket);
                     }
                 }
             });
-            logger.debug("Server created at port: " + serverSocket.getLocalPort());
 
-            executorSockets.submit(new Callable<Object>() {
+            executorSockets.submit(new Callable<Void>() {
                 @Override
-                public Object call() throws Exception {
-                    while(true) {
-                        for (Socket socket : peers) {
-                            if (socket.getInputStream().available() > 0) {
-                                handleMessage(socket);
+                public Void call() throws Exception {
+                    while (true) {
+                        for(ObjectSocket peer : peers) {
+                            if (peer.available() > 0) {
+                                handlePeerMessage(peer);
                             }
                         }
                     }
                 }
             });
-
-            return serverSocket.getLocalPort();
         } catch (IOException e) {
-            logger.error("Could not find suitable port.\n" + e);
-            return 0;
+            logger.error(e.toString());
         }
     }
 
-    public void joinNetwork(String host, int port) {
+    public void connectPeer(String host, int port) {
         try {
-            Socket socket = new Socket(host, port);
-            logger.info("Connected to: " + socket.getRemoteSocketAddress().toString());
-            //TODO get list of members and connect each of them
-        } catch (IOException e) {
-            logger.error("Could not connect to server at " + host + ":" + port + "\n" + e);
-        }
-    }
-
-    private void handleMessage(Socket socket) {
-        try {
-            DataInputStream dis = new DataInputStream(socket.getInputStream());
-            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-            byte command = dis.readByte();
-            if (command == COMMAND_GET_PEERS_LIST) {
-                dos.write(COMMAND_SET_PEERS_LIST);
-                dos.writeUTF(Arrays.toString(getPeersListAsStringArray()));
-                dos.flush();
-            } else if(command == COMMAND_PUT_KEY) {
-
-            } else if(command == COMMAND_SET_PEERS_LIST) {
-                String[] arguments = getArgumentsFromStream(dis);
-                addToPeers(arguments);
-
-            }
+            ObjectSocket socket = new ObjectSocket(new Socket(host,port));
+            addToPeers(socket);
+            logger.info(serverSocket.toString() + " is connected to " + socket.toString());
+            requestPeersListFromNetwork();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     *
+     * @return local port that this instance run on
+     */
+    public int getServerPort() {
+        if(serverSocket == null)
+            return 0;
+        else
+            return serverSocket.getLocalPort();
+    }
 
-    private void addToPeers(Socket socket) {
+    public ArrayList<ObjectSocket> getPeersList() {
+        return (ArrayList<ObjectSocket>) peers.clone();
+    }
+
+    private void handlePeerMessage(ObjectSocket socket) {
+        try {
+            RequestMessage message = (RequestMessage) socket.readObject();
+
+            if (message == null)
+                return;
+            logger.debug("Message " + message.name() + " received from " + socket.toString());
+            switch (message) {
+                case GET_PEERS_LIST: messageGetPeersList(socket, message);break;
+                case PEERS_LIST: messagePeersList(socket, message);break;
+            }
+        } catch (IOException e) {
+            logger.error(e);
+        }
+    }
+
+    /**
+     * Writes an object to outputstream of desired target and flushes
+     * @param object should implement Serializable
+     * @param socket ObjectSocket to receive the object
+     * @return
+     */
+    public boolean sendObject(Serializable object, ObjectSocket socket) {
+        try {
+            socket.sendObjectAndFlush(object);
+        } catch (IOException e) {
+            return false;
+        }
+        return true;
+    }
+
+    public void requestPeersListFromNetwork() {
+        logger.debug("Peer count of " + serverSocket.toString() + peers.size());
+        if (peers.size() == 0)
+            return;
+        sendObject(RequestMessage.GET_PEERS_LIST, peers.get(0));
+
+    }
+
+    private void addToPeers(ObjectSocket socket) {
         synchronized (lockPeers) {
             peers.add(socket);
         }
     }
 
-    private void addToPeers(String[] peersList) {
-        for (String arg : peersList) {
-            String h[] = arg.split(":");
-            logger.debug("Adding peer " + Arrays.toString(h));
-            try {
-                Socket peerSocket = new Socket(h[0],Integer.parseInt(h[1]));
-                addToPeers(peerSocket);
-            } catch (IOException e) {
-                logger.error(e);
-            }
-        }
+    private void messageGetPeersList(ObjectSocket socket, RequestMessage message) {
+        RequestMessage response = RequestMessage.PEERS_LIST;
+        response.data = peers;
+        sendObject(response,socket);
     }
 
-    public String[] getPeersListAsStringArray() {
-        synchronized (lockPeers) {
-            String[] strings = null;
-            if (peers.size() == 0)
-                return strings;
-            strings = new String[peers.size()];
-            int i = 0;
-            for (Socket socket : peers) {
-                strings[i++] = socket.getRemoteSocketAddress().toString();
-            }
-            return strings;
+    private void messagePeersList(ObjectSocket socket, RequestMessage message) {
+        logger.debug("Peers list received from " + socket);
+        for (ObjectSocket s : (ArrayList<ObjectSocket>)message.data) {
+            logger.debug("messagePeersList " + s.toString());
         }
-    }
-
-
-    private String[] getArgumentsFromStream(DataInputStream dis) {
-        String parameters = null;
-        try {
-            parameters = dis.readUTF();
-        } catch (IOException e) {
-            logger.error(e);
-        }
-        return parameters.split("\n");
     }
 }
