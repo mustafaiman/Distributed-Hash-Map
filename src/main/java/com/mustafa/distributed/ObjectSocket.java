@@ -60,7 +60,19 @@ public class ObjectSocket implements Serializable {
         return socket.getOutputStream();
     }
 
+    public String getRemoteHostAddress() {
+        return identifier().split(":")[0].substring(1);
+    }
+
+    public int getRemoteHostPort() {
+        return Integer.parseInt(identifier().split(":")[1]);
+    }
+
     public String toString() {
         return socket.toString();
+    }
+
+    public String identifier() {
+        return socket.getRemoteSocketAddress().toString().substring(1);
     }
 }
