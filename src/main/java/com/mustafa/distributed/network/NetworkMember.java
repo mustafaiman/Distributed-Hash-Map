@@ -169,7 +169,6 @@ public class NetworkMember {
         RequestMessage req = new RequestMessage();
         req.msg = RequestMessage.MSG.EXCHANGE_CONNECTION_PORTS;
         req.data = connectionPorts;
-        System.out.println(connectionPorts.toString());
         req.identifier = identifier();
         sendObject(req, socket);
 
@@ -229,7 +228,6 @@ public class NetworkMember {
      */
     private void messageExchangeConnectionPorts(ObjectSocket socket, RequestMessage message) {
         try {
-            System.out.println(message.identifier);
             connectionPorts.add(((String) message.identifier));
             for (String s : ((HashSet<String>) message.data)) {
                 if (!connectionPorts.contains(s) && !pendingConnections.contains(s)) {
@@ -244,7 +242,6 @@ public class NetworkMember {
 
             requestProvideConnectionPorts(socket);
         } catch (Exception e) {
-            System.out.println(message.data);
             e.printStackTrace();
         }
     }
