@@ -27,6 +27,8 @@ public class NetworkMember {
 
     private ArrayList<String> pendingConnections = new ArrayList<>();
 
+    private NetworkObserver observer;
+
 
     public NetworkMember() {
         try {
@@ -96,16 +98,20 @@ public class NetworkMember {
 
     private void handlePeerMessage(ObjectSocket socket) {
         try {
-
-            RequestMessage message = (RequestMessage) socket.readObject();
-
-            if (message == null)
-                return;
-            logger.debug("Message ( " + identifier() + " ) " + message.name() + " received from " + getIdentifierFromHostPort(socket.getRemoteHostAddress(),socket.getRemoteHostPort()));
-            switch (message) {
-                case EXCHANGE_CONNECTION_PORTS: messageExchangeConnectionPorts(socket, message); break;
-                case PROVIDE_CONNECTION_PORTS: messageProvideConnectionPorts(socket, message); break;
+            Object objectMessage = socket.readObject();
+            if (objectMessage instanceof  RequestMessage) {
+                RequestMessage requestMessage = (RequestMessage) objectMessage;
+                logger.debug("Message ( " + identifier() + " ) " + requestMessage.name() + " received from " + getIdentifierFromHostPort(socket.getRemoteHostAddress(),socket.getRemoteHostPort()));
+                switch (requestMessage) {
+                    case EXCHANGE_CONNECTION_PORTS: messageExchangeConnectionPorts(socket, requestMessage); break;
+                    case PROVIDE_CONNECTION_PORTS: messageProvideConnectionPorts(socket, requestMessage); break;
+                }
+            } else {
+                ApplicationMessage applicationMessage = (ApplicationMessage)objectMessage;
+                logger.debug("Message ( " + identifier() + " ) " + applicationMessage.name() + " received from " + getIdentifierFromHostPort(socket.getRemoteHostAddress(),socket.getRemoteHostPort()));
+                notifyObserver(socket, applicationMessage);
             }
+
         } catch (IOException e) {
             logger.error(e);
         }
@@ -149,6 +155,21 @@ public class NetworkMember {
         sendObject(req, socket);
     }
 
+    public void broadcast(RequestMessage message) {
+        for (ObjectSocket peer : peers.values()) {
+            sendObject(message, peer);
+        }
+    }
+
+    public void broadcast(ApplicationMessage message) {
+        String ids = "";
+        for (ObjectSocket peer : peers.values()) {
+            sendObject(message, peer);
+            ids += peer.identifier() + ";";
+        }
+        logger.debug(identifier() + " broadcasted to " + ids);
+    }
+
     private void addToPeers(ObjectSocket socket) {
             peers.put(socket.identifier(),socket);
     }
@@ -156,7 +177,6 @@ public class NetworkMember {
     private void messageExchangeConnectionPorts(ObjectSocket socket, RequestMessage message) {
         connectionPorts.add(((String)message.identifier));
         for (String s: ((HashSet<String>)message.data)) {
-            logger.debug("Connecting( " + identifier() + " ) to " + s);
             if (!connectionPorts.contains(s) && !pendingConnections.contains(s)) {
                 pendingConnections.add(s);
             }
@@ -204,6 +224,21 @@ public class NetworkMember {
         } catch (UnknownHostException e) {
             logger.error(e);
             return null;
+        }
+    }
+
+    /**
+     * NetworkMember supports only one observer at a time. Registering a new observer removes previous one.
+     * NetworkMember redirects every message other than its own internal messages to the observer.
+     * @param observer Observer object to be notified.
+     */
+    public void registerObserver(NetworkObserver observer) {
+        this.observer = observer;
+    }
+
+    public void notifyObserver(ObjectSocket socket, ApplicationMessage message) {
+        if(observer!= null) {
+            observer.onMessage(socket, message);
         }
     }
 }

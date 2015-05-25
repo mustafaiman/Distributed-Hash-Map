@@ -98,7 +98,7 @@ public class NetworkMemberTest
         NetworkMember s1 = new NetworkMember();
         NetworkMember s2 = new NetworkMember();
         String[] hostId = s1.identifier().split(":");
-        s2.connectPeer(hostId[0],Integer.parseInt(hostId[1]));
+        s2.connectPeer(hostId[0], Integer.parseInt(hostId[1]));
         boolean succ = s2.sendObject(RequestMessage.LEAVE_NETWORK, s2.getPeersList().entrySet().iterator().next().getValue());
         assertTrue(succ);
     }
