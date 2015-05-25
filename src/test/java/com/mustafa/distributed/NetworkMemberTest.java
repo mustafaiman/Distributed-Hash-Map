@@ -46,13 +46,7 @@ public class NetworkMemberTest
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        System.out.println(serv.identifier());
-        for (HashMap.Entry<String, ObjectSocket> ss : serv.getPeersList().entrySet())
-            System.out.println(ss.getKey());
-        System.out.println("----");
-        System.out.println(client.identifier());
-        for (HashMap.Entry<String, ObjectSocket> ss : client.getPeersList().entrySet())
-            System.out.println(ss.getKey());
+
         assertEquals(1, serv.getPeersList().size());
         assertEquals(1, client.getPeersList().size());
     }
@@ -103,9 +97,8 @@ public class NetworkMemberTest
     public void testSendObject() {
         NetworkMember s1 = new NetworkMember();
         NetworkMember s2 = new NetworkMember();
-        int port = s1.getServerPort();
-        s2.connectPeer("127.0.0.1",port);
-        System.out.println(s2.getPeersList().size());
+        String[] hostId = s1.identifier().split(":");
+        s2.connectPeer(hostId[0],Integer.parseInt(hostId[1]));
         boolean succ = s2.sendObject(RequestMessage.LEAVE_NETWORK, s2.getPeersList().entrySet().iterator().next().getValue());
         assertTrue(succ);
     }

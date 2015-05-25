@@ -7,6 +7,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -21,12 +22,11 @@ public class NetworkMember {
     ExecutorService executorSockets = Executors.newSingleThreadExecutor();
 
     private ServerSocket serverSocket;
-    private HashMap<String,ObjectSocket> peers = new HashMap<>();
+    private ConcurrentHashMap<String,ObjectSocket> peers = new ConcurrentHashMap<>();
     private HashSet<String> connectionPorts = new HashSet<>();
 
     private ArrayList<String> pendingConnections = new ArrayList<>();
 
-    private Object lockPeers = new Object();
 
     public NetworkMember() {
         try {
@@ -90,8 +90,8 @@ public class NetworkMember {
             return serverSocket.getLocalPort();
     }
 
-    public HashMap<String,ObjectSocket> getPeersList() {
-        return (HashMap<String,ObjectSocket>) peers.clone();
+    public ConcurrentHashMap<String,ObjectSocket> getPeersList() {
+        return (ConcurrentHashMap<String,ObjectSocket>) peers;
     }
 
     private void handlePeerMessage(ObjectSocket socket) {
@@ -150,9 +150,7 @@ public class NetworkMember {
     }
 
     private void addToPeers(ObjectSocket socket) {
-        synchronized (lockPeers) {
             peers.put(socket.identifier(),socket);
-        }
     }
 
     private void messageExchangeConnectionPorts(ObjectSocket socket, RequestMessage message) {
@@ -173,14 +171,14 @@ public class NetworkMember {
     }
 
     private void messageProvideConnectionPorts(ObjectSocket socket, RequestMessage message) {
-        connectionPorts.add(((String)message.identifier));
-        for (String s: ((HashSet<String>)message.data)) {
+        connectionPorts.add(((String) message.identifier));
+        for (String s : ((HashSet<String>) message.data)) {
             if (!connectionPorts.contains(s) && !pendingConnections.contains(s)) {
                 pendingConnections.add(s);
             }
         }
-        for (String s: pendingConnections) {
-            connectPeer(getHostFromIdentifier(s),getPortFromIdentifier(s));
+        for (String s : pendingConnections) {
+            connectPeer(getHostFromIdentifier(s), getPortFromIdentifier(s));
         }
         pendingConnections.clear();
     }
