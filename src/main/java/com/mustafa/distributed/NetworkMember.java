@@ -141,6 +141,7 @@ public class NetworkMember {
 
         RequestMessage req = RequestMessage.EXCHANGE_CONNECTION_PORTS;
         req.data = connectionPorts;
+        System.out.println(connectionPorts.toString());
         req.identifier = identifier();
         sendObject(req, socket);
 
@@ -175,19 +176,25 @@ public class NetworkMember {
     }
 
     private void messageExchangeConnectionPorts(ObjectSocket socket, RequestMessage message) {
-        connectionPorts.add(((String)message.identifier));
-        for (String s: ((HashSet<String>)message.data)) {
-            if (!connectionPorts.contains(s) && !pendingConnections.contains(s)) {
-                pendingConnections.add(s);
+        try {
+            System.out.println(message.identifier);
+            connectionPorts.add(((String) message.identifier));
+            for (String s : ((HashSet<String>) message.data)) {
+                if (!connectionPorts.contains(s) && !pendingConnections.contains(s)) {
+                    pendingConnections.add(s);
+                }
             }
-        }
-        for (String s: pendingConnections) {
-            logger.debug("Connecting( " + identifier() + " ) to " + s);
-            connectPeer(getHostFromIdentifier(s),getPortFromIdentifier(s));
-        }
-        pendingConnections.clear();
+            for (String s : pendingConnections) {
+                logger.debug("Connecting( " + identifier() + " ) to " + s);
+                connectPeer(getHostFromIdentifier(s), getPortFromIdentifier(s));
+            }
+            pendingConnections.clear();
 
-        requestProvideConnectionPorts(socket);
+            requestProvideConnectionPorts(socket);
+        } catch (Exception e) {
+            System.out.println(message.data);
+            e.printStackTrace();
+        }
     }
 
     private void messageProvideConnectionPorts(ObjectSocket socket, RequestMessage message) {
