@@ -33,7 +33,7 @@ public class DistributedHashMap<K,V> extends HashMap<K,V> implements NetworkObse
 
     @Override
     public void onMessage(ObjectSocket socket, ApplicationMessage message) {
-        switch (message) {
+        switch (message.msg) {
             case PUT: messagePut(socket, message); break;
             case GET: messageGet(socket, message); break;
             case REMOVE: messageRemove(socket, message); break;
@@ -43,7 +43,8 @@ public class DistributedHashMap<K,V> extends HashMap<K,V> implements NetworkObse
     @Override
     public V put(K key, V value) {
         V returnValue = super.put(key, value);
-        ApplicationMessage applicationMessage = ApplicationMessage.PUT;
+        ApplicationMessage applicationMessage = new ApplicationMessage();
+        applicationMessage.msg = ApplicationMessage.MSG.PUT;
 
         applicationMessage.tag = (Serializable) key;
         applicationMessage.value = (Serializable) value;
@@ -60,7 +61,8 @@ public class DistributedHashMap<K,V> extends HashMap<K,V> implements NetworkObse
     @Override
     public V remove(Object key) {
 
-        ApplicationMessage applicationMessage = ApplicationMessage.REMOVE;
+        ApplicationMessage applicationMessage = new ApplicationMessage();
+        applicationMessage.msg = ApplicationMessage.MSG.REMOVE;
         applicationMessage.tag = (Serializable) key;
         member.broadcast(applicationMessage);
         return super.remove(key);

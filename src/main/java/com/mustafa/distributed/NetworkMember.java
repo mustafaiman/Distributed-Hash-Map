@@ -101,14 +101,14 @@ public class NetworkMember {
             Object objectMessage = socket.readObject();
             if (objectMessage instanceof  RequestMessage) {
                 RequestMessage requestMessage = (RequestMessage) objectMessage;
-                logger.debug("Message ( " + identifier() + " ) " + requestMessage.name() + " received from " + getIdentifierFromHostPort(socket.getRemoteHostAddress(),socket.getRemoteHostPort()));
-                switch (requestMessage) {
+                logger.debug("Message ( " + identifier() + " ) " + requestMessage.msg.name() + " received from " + getIdentifierFromHostPort(socket.getRemoteHostAddress(),socket.getRemoteHostPort()));
+                switch (requestMessage.msg) {
                     case EXCHANGE_CONNECTION_PORTS: messageExchangeConnectionPorts(socket, requestMessage); break;
                     case PROVIDE_CONNECTION_PORTS: messageProvideConnectionPorts(socket, requestMessage); break;
                 }
             } else {
                 ApplicationMessage applicationMessage = (ApplicationMessage)objectMessage;
-                logger.debug("Message ( " + identifier() + " ) " + applicationMessage.name() + " received from " + getIdentifierFromHostPort(socket.getRemoteHostAddress(),socket.getRemoteHostPort()));
+                logger.debug("Message ( " + identifier() + " ) " + applicationMessage.msg.name() + " received from " + getIdentifierFromHostPort(socket.getRemoteHostAddress(),socket.getRemoteHostPort()));
                 notifyObserver(socket, applicationMessage);
             }
 
@@ -139,7 +139,8 @@ public class NetworkMember {
     public void requestExchangeConnectionPorts(ObjectSocket socket) {
         logger.debug("Connection ports of " + identifier() + " ------> " + connectionPorts.toString());
 
-        RequestMessage req = RequestMessage.EXCHANGE_CONNECTION_PORTS;
+        RequestMessage req = new RequestMessage();
+        req.msg = RequestMessage.MSG.EXCHANGE_CONNECTION_PORTS;
         req.data = connectionPorts;
         System.out.println(connectionPorts.toString());
         req.identifier = identifier();
@@ -150,7 +151,9 @@ public class NetworkMember {
     public void requestProvideConnectionPorts(ObjectSocket socket) {
         logger.debug("Connection ports of " + identifier() + " ------> " + connectionPorts.toString());
 
-        RequestMessage req = RequestMessage.PROVIDE_CONNECTION_PORTS;
+
+        RequestMessage req = new RequestMessage();
+        req.msg = RequestMessage.MSG.PROVIDE_CONNECTION_PORTS;
         req.data = connectionPorts;
         req.identifier = identifier();
         sendObject(req, socket);
