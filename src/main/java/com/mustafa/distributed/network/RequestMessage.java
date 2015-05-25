@@ -1,4 +1,4 @@
-package com.mustafa.distributed;
+package com.mustafa.distributed.network;
 
 import java.io.Serializable;
 

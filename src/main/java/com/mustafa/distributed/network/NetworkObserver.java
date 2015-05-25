@@ -1,4 +1,6 @@
-package com.mustafa.distributed;
+package com.mustafa.distributed.network;
+
+import com.mustafa.distributed.distributedhashmap.ApplicationMessage;
 
 /**
  * Created by Mustafa on 25.5.2015.

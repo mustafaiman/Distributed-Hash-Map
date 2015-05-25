@@ -1,5 +1,6 @@
 package com.mustafa.distributed;
 
+import com.mustafa.distributed.distributedhashmap.DistributedHashMap;
 import junit.framework.TestCase;
 
 public class DistributedHashMapTest extends TestCase {

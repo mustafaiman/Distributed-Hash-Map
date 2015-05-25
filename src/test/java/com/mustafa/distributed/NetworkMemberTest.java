@@ -1,14 +1,10 @@
 package com.mustafa.distributed;
 
-import jdk.nashorn.internal.ir.annotations.Ignore;
+import com.mustafa.distributed.network.NetworkMember;
+import com.mustafa.distributed.network.RequestMessage;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 
 /**
  * Unit test for simple App.

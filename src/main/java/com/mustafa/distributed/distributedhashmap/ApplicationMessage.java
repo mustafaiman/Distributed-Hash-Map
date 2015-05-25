@@ -1,4 +1,4 @@
-package com.mustafa.distributed;
+package com.mustafa.distributed.distributedhashmap;
 
 import java.io.Serializable;
 
@@ -9,7 +9,8 @@ public class ApplicationMessage implements Serializable {
     public enum MSG {
         PUT,
         GET,
-        REMOVE;
+        REMOVE,
+        TABLE, REQUEST_TABLE;
     }
 
     public MSG msg;

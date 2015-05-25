@@ -1,5 +1,6 @@
-package com.mustafa.distributed;
+package com.mustafa.distributed.network;
 
+import com.mustafa.distributed.distributedhashmap.ApplicationMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -99,7 +100,7 @@ public class NetworkMember {
     private void handlePeerMessage(ObjectSocket socket) {
         try {
             Object objectMessage = socket.readObject();
-            if (objectMessage instanceof  RequestMessage) {
+            if (objectMessage instanceof RequestMessage) {
                 RequestMessage requestMessage = (RequestMessage) objectMessage;
                 logger.debug("Message ( " + identifier() + " ) " + requestMessage.msg.name() + " received from " + getIdentifierFromHostPort(socket.getRemoteHostAddress(),socket.getRemoteHostPort()));
                 switch (requestMessage.msg) {
@@ -132,11 +133,11 @@ public class NetworkMember {
         return true;
     }
 
-    public void addToConnectionPorts(ObjectSocket socket) {
+    private void addToConnectionPorts(ObjectSocket socket) {
         connectionPorts.add(getIdentifierFromHostPort(socket.getSocket().getInetAddress().toString().split("/")[1],socket.getSocket().getPort()));
     }
 
-    public void requestExchangeConnectionPorts(ObjectSocket socket) {
+    private void requestExchangeConnectionPorts(ObjectSocket socket) {
         logger.debug("Connection ports of " + identifier() + " ------> " + connectionPorts.toString());
 
         RequestMessage req = new RequestMessage();
@@ -148,7 +149,7 @@ public class NetworkMember {
 
     }
 
-    public void requestProvideConnectionPorts(ObjectSocket socket) {
+    private void requestProvideConnectionPorts(ObjectSocket socket) {
         logger.debug("Connection ports of " + identifier() + " ------> " + connectionPorts.toString());
 
 
