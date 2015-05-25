@@ -29,12 +29,12 @@ public class ObjectSocket implements Serializable {
         return ois;
     }
 
-    public void sendObjectAndFlush(Serializable object) throws IOException{
+    public void sendObjectAndFlush(Serializable object) throws IOException {
         getObjectOutputStream().writeObject(object);
         getObjectOutputStream().flush();
     }
 
-    public Object readObject() throws  IOException {
+    public Object readObject() throws IOException {
         if (available() <= 0)
             return null;
         try {
@@ -44,7 +44,7 @@ public class ObjectSocket implements Serializable {
         }
     }
 
-    public int available() throws IOException{
+    public int available() throws IOException {
         return getInputStream().available();
     }
 
@@ -52,11 +52,11 @@ public class ObjectSocket implements Serializable {
         return socket;
     }
 
-    public InputStream getInputStream() throws IOException{
+    public InputStream getInputStream() throws IOException {
         return socket.getInputStream();
     }
 
-    public OutputStream getOutputStream() throws IOException{
+    public OutputStream getOutputStream() throws IOException {
         return socket.getOutputStream();
     }
 

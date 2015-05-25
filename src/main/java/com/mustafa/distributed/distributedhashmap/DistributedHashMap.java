@@ -11,10 +11,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class DistributedHashMap<K,V> extends HashMap<K,V> implements NetworkObserver
-{
+public class DistributedHashMap<K, V> extends HashMap<K, V> implements NetworkObserver {
     final static Logger logger = LogManager.getLogger(NetworkMember.class.getName());
 
+    /**
+     * It handles network operations
+     */
     private NetworkMember member;
 
     private boolean initialized;
@@ -40,11 +42,21 @@ public class DistributedHashMap<K,V> extends HashMap<K,V> implements NetworkObse
     @Override
     public void onMessage(ObjectSocket socket, ApplicationMessage message) {
         switch (message.msg) {
-            case PUT: messagePut(socket, message); break;
-            case GET: messageGet(socket, message); break;
-            case REMOVE: messageRemove(socket, message); break;
-            case TABLE: messageTable(socket, message); break;
-            case REQUEST_TABLE: messageRequestTable(socket, message); break;
+            case PUT:
+                messagePut(socket, message);
+                break;
+            case GET:
+                messageGet(socket, message);
+                break;
+            case REMOVE:
+                messageRemove(socket, message);
+                break;
+            case TABLE:
+                messageTable(socket, message);
+                break;
+            case REQUEST_TABLE:
+                messageRequestTable(socket, message);
+                break;
         }
     }
 
@@ -91,7 +103,7 @@ public class DistributedHashMap<K,V> extends HashMap<K,V> implements NetworkObse
     }
 
     private void messageTable(ObjectSocket socket, ApplicationMessage message) {
-        putAll((Map)message.value);
+        putAll((Map) message.value);
     }
 
     private void messageRequestTable(ObjectSocket socket, ApplicationMessage message) {
